@@ -51,7 +51,7 @@ namespace Chinese._Scanner
             _watch.Start();
             preWork(str);
             work();
-          
+
             _watch.Stop();
             Speed = $"{(float)_context.Length / (float)_watch.ElapsedMilliseconds * 1000}字/秒";
             return _passage;
@@ -60,9 +60,9 @@ namespace Chinese._Scanner
         /**********************
          * 为多线程设计考虑，
          * ***********************/
-         /// <summary>
-         /// 解析完成一个子句触发
-         /// </summary>
+        /// <summary>
+        /// 解析完成一个子句触发
+        /// </summary>
         public event LexEvent SubSenceFinish;
         /// <summary>
         /// 解析完成一个句子触发
@@ -89,7 +89,9 @@ namespace Chinese._Scanner
         /// 分词速度
         /// </summary>
         public string Speed { get; private set; }
-
+        /// <summary>
+        /// 用于计算分词速度
+        /// </summary>
         private Stopwatch _watch;
         /// <summary>
         /// 临时文章
@@ -195,9 +197,10 @@ namespace Chinese._Scanner
                 return '\0';
             return _context[_currentPos];
         }
-        /**************************
-         * 预处理
-         * ***********************/
+        /// <summary>
+        /// 预处理
+        /// </summary>
+        /// <param name="str"></param>
         private void preWork(string str)
         {
             _currentPos = -1;
@@ -210,13 +213,12 @@ namespace Chinese._Scanner
 
         /// <summary>
         /// 主分词函数
+        /// 从头到尾扫描字符串一遍，
+        /// 并进行相应的处理
         /// </summary>
         /// 
         private void work()
         {
-
-
-
             while (true)
             {
                 if (_currentPos < _context.Length - 1)
@@ -227,7 +229,7 @@ namespace Chinese._Scanner
                         break;
                     else
                     {
-                        
+
                         endFlex();
                         continue;
                     }
@@ -281,14 +283,13 @@ namespace Chinese._Scanner
 
             }
 
-
-
-           
-
         }
 
 
-
+        /// <summary>
+        /// 切分一些特殊字符
+        /// </summary>
+        /// <returns></returns>
         private bool workSpecialChars()
         {
             /****************************************************
@@ -305,6 +306,7 @@ namespace Chinese._Scanner
             }
             /*********************************
              * 处理未知字符开始的字符片段
+             * 其他语言的文字 （日文，韩文等）
              * *******************************/
             if (!Regex_Helper.Is_ACN(_token.ToString()) && !Regex_Helper.Is_Mark(_token.ToString()))
             {
@@ -318,9 +320,7 @@ namespace Chinese._Scanner
         {
 
             /***********************************
-             * d段落结束符 两个连续空格
-             * 注 此时 可能还在 searchinthetree
-             * 所以不马上执行 paragraphend()；
+             * \t 认为是段落的结束符
              * ************************************/
             if (_token == '\t')
             {
@@ -332,6 +332,10 @@ namespace Chinese._Scanner
                     return true;
                 }
             }
+            /******************
+             * 空格认为是句子的结束符
+             * 但是 英语中只是词的分隔符
+             * ****************************/
             if (_token == ' ')
             {
                 if (_serachTime != 0)
@@ -343,12 +347,12 @@ namespace Chinese._Scanner
                             paragraphEnd(' ');
                         else
                         {
-                                previous();
-                                sentenceEnd(' ');
+                            previous();
+                            sentenceEnd(' ');
                         }
                     return true;
                 }
-                         
+
             }
             return false;
         }
@@ -364,8 +368,27 @@ namespace Chinese._Scanner
             else
                 _current_node = _current_node.Get_Child(_token);
 
-            isEndFlex();
-            
+
+            /*********************
+             * 记录找到的最长词
+             * ********************************/
+            if (_current_node != null)
+                if (!_current_node.Is_Empty)
+                {
+                    _max_node = _current_node;
+                    _maxTime = _serachTime;
+                }
+            /*****************************
+             * 当前搜索节点不是从根节点
+             * **************************/
+            _isSearchFromTree = false;
+
+            /**************************
+             * 检查是否结束向下搜索
+             * ***********************/
+            if (_current_node == null)
+                endFlex();
+
         }
         private bool isSubsentenceEnd()
         {
@@ -373,6 +396,11 @@ namespace Chinese._Scanner
                 return false;
             else
             {
+                /***************
+                 * 不等于0
+                 * 说明此时工作在searchtree
+                 * 不进行结束子句的操作
+                 * *************************/
                 if (_serachTime == 0)
                 {
                     subSentenceEnd(_token);
@@ -381,14 +409,24 @@ namespace Chinese._Scanner
                 else
                     return false;
             }
-           
+
         }
+        /// <summary>
+        /// 检查是否是句子结束
+        /// 如果是，结束句子
+        /// </summary>
+        /// <returns></returns>
         private bool isSentenceEnd()
         {
             if (!MarkHelper.IsSentenceEndMark(_token))
                 return false;
             else
             {
+                /***************
+                 * 不等于0
+                 * 说明此时工作在searchtree
+                 * 不进行结束句子的操作
+                 * *************************/
                 if (_serachTime != 0)
                     return false;
                 else
@@ -397,9 +435,9 @@ namespace Chinese._Scanner
                     return true;
                 }
             }
-           
+
         }
-       
+
 
         /// <summary>
         /// 切割字母数字
@@ -410,11 +448,13 @@ namespace Chinese._Scanner
 
             var name = ch.ToString();
 
-            /****************
+            /***************************
              * 用于确定是否回跳
+             * 如果执行了 while 下面的语句
+             * 需要回跳一个字符
              * *************************/
             bool flag = false;
-            while (_currentPos < _context.Length-1)
+            while (_currentPos < _context.Length - 1)
             {
 
                 flag = true;
@@ -439,9 +479,12 @@ namespace Chinese._Scanner
             }
 
             var w = new _WordInnfo() { Name = name, };
-
+            /**********************
+             * 设置获得片段的词性
+             * 可能是数词，也可能是其他（数学表达式，网址等）
+             * ************************/
             SetAlphaNumberType(w);
-           
+
 
             if (flag)
                 previous();
@@ -451,12 +494,12 @@ namespace Chinese._Scanner
         }
         /// <summary>
         /// 判断类型
-        /// reflexier也会使用 ，所以改成公开静态
+        /// reflexier也会使用 ，所以改成公开静态函数
         /// </summary>
         /// <param name="w"></param>
         public static void SetAlphaNumberType(_WordInnfo w)
         {
-            var t=StringHelper.Count(w.Name, (x) => Regex_Helper.Is_Concrete_Number(x.ToString()));
+            var t = StringHelper.Count(w.Name, (x) => Regex_Helper.Is_Concrete_Number(x.ToString()));
             if (t == w.Name.Length)
                 w.MaxType = WordType.NumberConcrete;
             else if (t == w.Name.Length - 1)
@@ -497,35 +540,8 @@ namespace Chinese._Scanner
             w.MaxType = WordType.Noun;
             _susentence.Words.Add(w);
         }
-        /*************************
-         * has problems 
-         * the endflex() doesn't work correctly
-         * ******************************/
-        private void afterWork()
-        {
-            paragraphEnd(_token);
-        }
         /// <summary>
-        /// 检查是否继续向下搜索
-        /// </summary>
-        /// <returns></returns>
-        private void isEndFlex()
-        {
-            if (_current_node != null)
-                if (!_current_node.Is_Empty)
-                {
-                    _max_node = _current_node;
-                    _maxTime = _serachTime;
-                }
-
-            _isSearchFromTree = false;
-
-            if (_current_node == null)
-                endFlex();
-        }
-        /// <summary>
-        /// 结束分词，添加最大词进句子的单词序列
-        /// 增加词典频率
+        /// 结束分词，添加最大词进入句子的单词序列
         /// </summary>
         private void endFlex()
         {
@@ -573,13 +589,12 @@ namespace Chinese._Scanner
             _isParagraphStarted = true;
             var b = _paragraph;
             _paragraph = new Paragraph();
-            _paragraph.Previous = b;
-            b.Next = _paragraph;
-            _passage.Paragraphs.Add(_paragraph);
+            _paragraph.SetPrevious(b);
+            _passage.Items.Add(_paragraph);
             _paragraph.Position.Start = _currentPos;
             sentenceStart();
-            
-           
+
+
         }
         /// <summary>
         /// 段落结束处理函数
@@ -597,15 +612,14 @@ namespace Chinese._Scanner
         /// </summary>
         private void sentenceStart()
         {
-           _isSentenceStarted = true;
+            _isSentenceStarted = true;
             var b = _sentence;
             _sentence = new Sentence();
-            _sentence.Previous = b;
-            b.Next = _sentence;
-            _paragraph.Sentences.Add(_sentence);
+            _sentence.SetPrevious(b);
+            _paragraph.Items.Add(_sentence);
             _sentence.Position.Start = _currentPos;
             subSentenceStart();
-       
+
         }
         /// <summary>
         /// 句子结束处理函数
@@ -615,6 +629,9 @@ namespace Chinese._Scanner
 
             subSentenceEnd(ch);
             _sentence.Position.End = _currentPos;
+            /***************
+             * 发布句子结束事件
+             * *************/
             if (SentenceFinish != null)
                 SentenceFinish(_paragraph);
         }
@@ -627,10 +644,14 @@ namespace Chinese._Scanner
 
             var b = _susentence;
             _susentence = new SimpleSentence();
-            b.Next = _susentence;
-            _susentence.Previous = b;
+            _susentence.SetPrevious(b);
+
             _susentence.Position.Start = _currentPos;
-            _sentence.S_Sentences.Add(_susentence);
+            _sentence.Items.Add(_susentence);
+            /***********************************************
+             * 回跳一次
+             * 因为在主函数向前移动了一个字符，而且没有对这个字符进行处理
+             * *********************************************/
             previous();
 
         }
@@ -639,6 +660,10 @@ namespace Chinese._Scanner
         /// </summary>
         private void subSentenceEnd(char ch)
         {
+            /****************
+             * 确定是否为子句添加一个标点
+             * 如果子句以空格结束
+             * ************************/
             var w = new _WordInnfo();
             if (MarkHelper.IsSubSentenceEndMark(ch))
                 w.Name = ch.ToString();
@@ -646,20 +671,23 @@ namespace Chinese._Scanner
                 w.Name = ch.ToString();
             else
                 w.Name = '。'.ToString();
-              w.MaxType = WordType.Mark;
+            w.MaxType = WordType.Mark;
             _susentence.Words.Add(w);
+
             _susentence.Position.End = _currentPos;
             _isSubsentenceStarted = false;
 
+            /******************
+             * 是否执行分次结果检测
+             * ****************/
             if (_config.IsReflex)
                 _checker.Check(_susentence.Words);
-
+            /*************************
+             * 发布子句解析完成事件
+             * ********************/
             if (SubSenceFinish != null)
                 SubSenceFinish(_paragraph);
         }
-        private _WordInnfo getWordInfoFromSingleDic(char ch) => DicProvider.SingleDic[ch];
-
-
     }
 }
 
