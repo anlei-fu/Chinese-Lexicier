@@ -9,85 +9,136 @@ namespace Fal.DataStructure.Tree
      * five members.
      * and some basic methods.
      *****************************************************/
-    public class Search_Tree_Node<T>
+    public class SearchTreeNode<T>
         
     { 
-        public Search_Tree_Node()
+        public SearchTreeNode()
         { }
-        public Search_Tree_Node(char _char)
+        public SearchTreeNode(char _char)
         {
             this.name = _char;
         }
-        public int All_Child_Count { get => get_All_Children_Count(); }
-        public LinkedList<Search_Tree_Node<T>> Children { get; set; }
+        /// <summary>
+        /// 所有子节点个数
+        /// </summary>
+        public int AllChildCount  => getAllChildrenCount(); 
+        /// <summary>
+        /// 子节点
+        /// </summary>
+        public LinkedList<SearchTreeNode<T>> Children { get; set; }
+        /// <summary>
+        /// 内容
+        /// </summary>
         public T Content { get; set; } 
-        public int Count { get => Children == null ? 0 : Children.Count; }
-        public Search_Tree_Node<T> this[char name] { get => Get_Child(name); }
-        public Search_Tree_Node<T> this[string name] { get => Get_Child(name); }
-        public Search_Tree_Node<T> Father { get; set; }
-        public string Full_Name { get => _get_Full_Name(); }
-        public bool Is_Empty { get;  set; } = true;
-        public Search_Tree_Node<T> Get_Child(string str)
+        /// <summary>
+        /// 自己点个数
+        /// </summary>
+        public int Count  => Children == null ? 0 : Children.Count; 
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> this[char name] => GetChild(name);
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> this[string name]   => GetChild(name); 
+        /// <summary>
+        /// 父节点
+        /// </summary>
+        public SearchTreeNode<T> Father { get; set; }
+        /// <summary>
+        /// 全名
+        /// </summary>
+        public string FullName  => _getFullName(); 
+        /// <summary>
+        /// 是否是空节点
+        /// </summary>
+        public bool IsEmpty { get;  set; } = true;
+        /// <summary>
+        /// 通过全名获取子节点
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> GetChild(string str)
         {
             if (Children != null)
                 foreach (var item in Children)
-                    if (item.Full_Name == str) return item;
+                    if (item.FullName == str)
+                        return item;
             return null;
         }
-        public Search_Tree_Node<T> Get_Child(char _char)
+        /// <summary>
+        /// 通过名称获取子节点
+        /// </summary>
+        /// <param name="_char"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> GetChild(char _char)
         {
             if (Children != null)
                 foreach (var item in Children)
                     if (item.name == _char) return item;
             return null;
         }
-        public Search_Tree_Node<T> Get_Child(Search_Tree_Node<T> child)
-        {
-            if (Children != null)
-                foreach (var item in Children)
-                    if (item.Full_Name == child.Full_Name) return item;
-            return null;
-        }
+       /// <summary>
+       /// 添加子节点
+       /// </summary>
+       /// <param name="_char"></param>
         public void Add(char _char)
         {
-            if (Get_Child(_char) != null) return;
-            add(new Search_Tree_Node<T>() { name = _char });
+            if (GetChild(_char) != null)
+                return;
+            add(new SearchTreeNode<T>() { name = _char });
         }
+        /// <summary>
+        /// 通过全名添加子节点
+        /// </summary>
+        /// <param name="str"></param>
         public void Add(string str)
         {
-            if (Get_Child(str) != null) return;
-            add(new Search_Tree_Node<T>() { name = str[str.Length - 1] });
+            if (GetChild(str) != null)
+                return;
+            add(new SearchTreeNode<T>() { name = str[str.Length - 1] });
         }
-        public void Add(Search_Tree_Node<T> node)
-        {
-            if (Get_Child(node) != null) return;
-            add(node);
-        }
-        public bool Contains(char _char) => Get_Child(_char) != null;
-        public bool Contains(Search_Tree_Node<T> node) => Get_Child(node) != null;
-        public bool Contains(string str) => Get_Child(str) != null;
+        
+        public bool Contains(char _char) => GetChild(_char) != null;
+    
+        public bool Contains(string str) => GetChild(str) != null;
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
-            if (GetType() != obj.GetType()) return false;
-            return (obj as Search_Tree_Node<T>).Full_Name == Full_Name;
+            if (obj == null)
+                return false;
+            if (GetType() != obj.GetType())
+                return false;
+            return (obj as SearchTreeNode<T>).FullName == FullName;
         }
-        public List<Search_Tree_Node<T>> Get_All_Children()
+        /// <summary>
+        /// 获取所有子节点
+        /// </summary>
+        /// <returns></returns>
+        public List<SearchTreeNode<T>> GetAllChildren()
         {
-            var ls = new List<Search_Tree_Node<T>>();
+            var ls = new List<SearchTreeNode<T>>();
             if (Children ==null) return ls;
             foreach (var item in Children)
             {
                 ls.Add(item);
-                foreach (var item1 in item.Get_All_Children()) ls.Add(item1);
+                foreach (var item1 in item.GetAllChildren()) ls.Add(item1);
             }
             return ls;
         }
-        public  List<Search_Tree_Node<T>> Get_All_Children_Not_Empty()
+        /// <summary>
+        /// 获取所有非空子节点
+        /// </summary>
+        /// <returns></returns>
+        public  List<SearchTreeNode<T>> Get_All_Children_Not_Empty()
         {
-            var ls = new List<Search_Tree_Node<T>>();
-            foreach (var item in Get_All_Children())
-                if (!item.Is_Empty)
+            var ls = new List<SearchTreeNode<T>>();
+            foreach (var item in GetAllChildren())
+                if (!item.IsEmpty)
                     ls.Add(item);
             return ls;
         }
@@ -95,25 +146,16 @@ namespace Fal.DataStructure.Tree
         {
             return base.GetHashCode();
         }
-        public void Remove(Search_Tree_Node<T> node)
-        {
-            if (Children != null)
-                foreach (var item in Children)
-                {
-                    if (item.Full_Name == node.Full_Name)
-                    {
-                        node.Father = null;
-                        Children.Remove(item);
-                        return;
-                    }
-                }
-        }
+      /// <summary>
+      /// 通过全名删除子节点
+      /// </summary>
+      /// <param name="str"></param>
         public void Remove(string str)
         {
             if (Children != null)
                 foreach (var item in Children)
                 {
-                    if (item.Full_Name == str)
+                    if (item.FullName == str)
                     {
                         item.Father = null;
                         Children.Remove(item);
@@ -123,6 +165,10 @@ namespace Fal.DataStructure.Tree
                 }
 
         }
+        /// <summary>
+        /// 通过名称删除子点
+        /// </summary>
+        /// <param name="_char"></param>
         public void Remove(char _char)
         {
             if (Children != null)
@@ -136,18 +182,49 @@ namespace Fal.DataStructure.Tree
                     }
                 }
         }
-        public override string ToString() => $"{Full_Name}_nd_";
-        public static bool operator ==(Search_Tree_Node<T> node1, Search_Tree_Node<T> node2) => Equals(node1, node2);
-        public static bool operator !=(Search_Tree_Node<T> node1, Search_Tree_Node<T> node2) => !Equals(node1, node2);
+     
+        public static bool operator ==(SearchTreeNode<T> node1, SearchTreeNode<T> node2) => Equals(node1, node2);
+        public static bool operator !=(SearchTreeNode<T> node1, SearchTreeNode<T> node2) => !Equals(node1, node2);
         private char name;
-        private void add(Search_Tree_Node<T> node)
+        public SearchTreeNode<T> GetChild(SearchTreeNode<T> child)
         {
-            if (node.Father != null) node.Father.Remove(node);
+            if (Children != null)
+                foreach (var item in Children)
+                    if (item.FullName == child.FullName) return item;
+            return null;
+        }
+        public void Remove(SearchTreeNode<T> node)
+        {
+            if (Children != null)
+                foreach (var item in Children)
+                {
+                    if (item.FullName == node.FullName)
+                    {
+                        node.Father = null;
+                        Children.Remove(item);
+                        return;
+                    }
+                }
+        }
+        private void add(SearchTreeNode<T> node)
+        {
+            if (node.Father != null)
+                node.Father.Remove(node);
             node.Father = this;
-            if (Children == null) Children = new LinkedList<Search_Tree_Node<T>>();
+            if (Children == null) Children = new LinkedList<SearchTreeNode<T>>();
             Children.AddLast(node);
         }
-        private string _get_Full_Name()
+        public void Add(SearchTreeNode<T> node)
+        {
+            if (GetChild(node) != null)
+                return;
+            add(node);
+        }
+        /// <summary>
+        /// 获取全名
+        /// </summary>
+        /// <returns></returns>
+        private string _getFullName()
         {
             var b = this;
             var name = this.name.ToString();
@@ -158,11 +235,11 @@ namespace Fal.DataStructure.Tree
             }
             return name.Length == 1 ? name : name.Substring(1, name.Length - 1);
         }
-        private int get_All_Children_Count()
+        private int getAllChildrenCount()
         {
             var t = Count;
             if (Children != null)
-                foreach (var item in Children) t += item.get_All_Children_Count();
+                foreach (var item in Children) t += item.getAllChildrenCount();
             return t;
         }
     }
