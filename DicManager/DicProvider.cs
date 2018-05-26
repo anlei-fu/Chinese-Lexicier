@@ -104,9 +104,6 @@ namespace Test.Chinese.DicManager
         public _WordInnfo GetWordInfoFromSingleDic(char ch) => SingleDic.ContainsKey(ch) ? SingleDic[ch] : null;
        
 
-        private void parseDic(string path, Search_Tree<_WordInnfo> dic)
-        {
-
-        }
+        
     }
 }
