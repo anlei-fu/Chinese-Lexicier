@@ -29,135 +29,180 @@ namespace Fal.DataStructure.Tree
     * telephone :18108342263
     * e-mail:18009049622@163.com
     ****************************************************************/
-    public class Search_Tree<T> : IFrom_String where T : IName
+    public class SearchTree<T>  where T : IName
     {
-        public Search_Tree()
+        public SearchTree()
         {
         }
-        public Search_Tree(IEnumerable<T> Items)
+        public SearchTree(IEnumerable<T> Items)
         {
-            Exception_Thrower.Check_argNull(Items);
-            foreach (var item in Items) Add_Node(item);
+
+            foreach (var item in Items)
+                AddNode(item);
         }
-        public Search_Tree(IEnumerable<string> Items)
+        public SearchTree(IEnumerable<string> Items)
         {
-            Exception_Thrower.Check_argNull(Items);
-            foreach (var item in Items) Add_Node(item);
+            foreach (var item in Items)
+                AddNode(item);
         }
+        /// <summary>
+        /// 树名，几乎不用
+        /// </summary>
         public string Name { get; set; } = "";
-        public int Count { get => Root.All_Child_Count; }
-        public Search_Tree_Node<T> Root { get; } = new Search_Tree_Node<T>('R');
-        public Search_Tree_Node<T> this[string name] { get => Get_Node(name); }
-        public Search_Tree_Node<T> Add_Node(string str)
+        /// <summary>
+        /// 所有节点的个数
+        /// 包含空节点
+        /// </summary>
+        public int Count { get => Root.AllChildCount; }
+        /// <summary>
+        /// 根节点
+        /// </summary>
+        public SearchTreeNode<T> Root { get; } = new SearchTreeNode<T>('R');
+        /// <summary>
+        /// 索引器
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> this[string name] => GetNode(name);
+        /// <summary>
+        /// 添加空节点
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> AddNode(string str)
         {
-            Exception_Thrower.Check_argNull(str);
-            if (String.IsNullOrEmpty(str)) return Root;
-            var b = get_Node_From_First_Layer(str[0]);
+
+            var b = getNodeFromFirstLayer(str[0]);
             if (b == null)
             {
-                var node = new Search_Tree_Node<T>(str[0]);
+                var node = new SearchTreeNode<T>(str[0]);
                 Root.Add(node);
-                First_Layer.Add(str[0], node);
+               _firstLayer.Add(str[0], node);
                 b = node;
             }
-            if (str.Length < 2) return b;
-            for (int i = 1; i < str.Length; i++)
-            {
-                var a = b.Get_Child(str[i]);
-                if (a == null)
-                {
-                    var node = new Search_Tree_Node<T>(str[i]);
-                    node.Father = b;
-                    b.Add(node);
-                    b = node;
-                }
-                else b = a;
-            }
-            b.Is_Empty = false;
-            return b;
-        }
-        public Search_Tree_Node<T> Add_Node(T item)
-        {
-            var b = Add_Node(item.Name);
-                        b.Content=item;
-            return b;
-        }
-        public bool Contain(string str)
-        {
-            var b = Get_Node(str);
-            if (b == null)
-                return false;
-            if (b.Is_Empty)
-                return false;
-            return true;
-        }
-        public void From_String(string str)
-        {
-            Exception_Thrower.Check_argNull(str);
-            foreach (var item in StringHelper.Splite(str, "_nd_")) Add_Node(item.Substring(0, item.Length - 4));
-        }
-        public void Clear() => First_Layer.Clear();
-        public List<Search_Tree_Node<T>> Get_All_Nodes()
-        {
-            var ls = new List<Search_Tree_Node<T>>();
-            foreach (var item in First_Layer)
-            {
-                ls.Add(item.Value);
-                foreach (var item1 in item.Value.Get_All_Children()) ls.Add(item1);
-            }
-            return ls;
-        }
-        public Search_Tree_Node<T> Get_Node(string str)
-        {
-            if (string.IsNullOrEmpty(str))
-                return null;
-            var b = get_Node_From_First_Layer(str[0]);
-            if (b == null)
-                return null;
             if (str.Length < 2)
                 return b;
             for (int i = 1; i < str.Length; i++)
             {
-                b = b.Get_Child(str[i]);
+                var a = b.GetChild(str[i]);
+                if (a == null)
+                {
+                    var node = new SearchTreeNode<T>(str[i]);
+                    node.Father = b;
+                    b.Add(node);
+                    b = node;
+                }
+                else
+                    b = a;
+            }
+            return b;
+        }
+        /// <summary>
+        /// 添加节点
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> AddNode(T item)
+        {
+            var b = AddNode(item.Name);
+            b.Content = item;
+            b.IsEmpty = false;
+            return b;
+        }
+        /// <summary>
+        /// 是否包含节点
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public bool Contain(string str)
+        {
+            var b = GetNode(str);
+            if (b == null)
+                return false;
+            if (b.IsEmpty)
+                return false;
+            return true;
+        }
+        /// <summary>
+        /// 清楚所有节点
+        /// </summary>
+        public void Clear()
+        {
+            _firstLayer.Clear();
+            Root.Children.Clear();
+        }
+        /// <summary>
+        /// 获取所有节点
+        /// </summary>
+        /// <returns></returns>
+        public List<SearchTreeNode<T>> GetAllNodes()
+        {
+            var ls = new List<SearchTreeNode<T>>();
+            foreach (var item in _firstLayer)
+            {
+                ls.Add(item.Value);
+                foreach (var item1 in item.Value.GetAllChildren())
+                    ls.Add(item1);
+            }
+            return ls;
+        }
+        /// <summary>
+        /// 获取节点
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public SearchTreeNode<T> GetNode(string str)
+        {
+            var b = getNodeFromFirstLayer(str[0]);
+            if (b == null)
+                return b;
+            if (str.Length < 2)
+                return b;
+            for (int i = 1; i < str.Length; i++)
+            {
+                b = b.GetChild(str[i]);
                 if (b == null)
                     return null;
             }
             return b;
         }
+        /// <summary>
+        /// 深度优先遍历获取所有节点
+        /// </summary>
+        /// <returns></returns>
         public List<T> ToList()
         {
             var ls = new List<T>();
-            foreach (var item in Get_All_Nodes())
-                if(!item.Is_Empty)
-                ls.Add(item.Content);
+            foreach (var item in GetAllNodes())
+                if (!item.IsEmpty)
+                    ls.Add(item.Content);
             return ls;
         }
-        public void Remove_Node(string str)
+        /// <summary>
+        /// 移除节点
+        /// </summary>
+        /// <param name="str"></param>
+        public void RemoveNode(string str)
         {
-            var b = Get_Node(str);
-            if (b.Children.Count != 0)
-                b.Is_Empty = true;
-            else
-            {
-                while (b.Father != null)
-                {
-                    var c = b.Father;
-                    b.Father.Remove(b);
-                    b.Father = null;
-                    if (c.Is_Empty)
-                        b = c;
+            var b = GetNode(str);
+            b.Father.Remove(b);
 
-                }
-            }
+            if (str.Length == 1)
+                if (_firstLayer.ContainsKey(str[0]))
+                    _firstLayer.Remove(str[0]);
 
         }
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            foreach (var item in Get_All_Nodes()) sb.Append(item.ToString());
-            return sb.ToString();
-        }
-        private Search_Tree_Node<T> get_Node_From_First_Layer(char _char) => First_Layer.ContainsKey(_char) ? First_Layer[_char] : null;
-        private Dictionary<char, Search_Tree_Node<T>> First_Layer = new Dictionary<char, Search_Tree_Node<T>>();
+      
+        /// <summary>
+        /// 从字典中获取节点
+        /// 第一层字符
+        /// </summary>
+        /// <param name="_char"></param>
+        /// <returns></returns>
+        private SearchTreeNode<T> getNodeFromFirstLayer(char _char) => _firstLayer.ContainsKey(_char) ? _firstLayer[_char] : null;
+        /// <summary>
+        /// 第一层节点的管理的字典
+        /// </summary>
+        private Dictionary<char, SearchTreeNode<T>> _firstLayer = new Dictionary<char, SearchTreeNode<T>>();
     }
 }
