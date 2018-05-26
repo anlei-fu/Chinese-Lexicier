@@ -19,6 +19,10 @@ namespace Test.Chinese.DicManager
             initia();
         }
         /// <summary>
+        /// 词典解析器
+        /// </summary>
+        private DicParser _parser;
+        /// <summary>
         /// 词典路径配置
         /// </summary>
         private LexConfig _config;
@@ -65,29 +69,16 @@ namespace Test.Chinese.DicManager
         /// </summary>
         private void initia()
         {
+            _parser = new DicParser();
             /****************
              * 正向词典
              * **********************/
             var b = File.ReadAllText(_config.DicPath);
-            foreach (var item in StringHelper.Splite1(b, "\r\n"))
-            {
-                  var w = _WordInnfo.Parse(item);
-                if (w != null)
-                    PositiveDic.Add_Node(w);
-            }
+            _parser.Parse(b, PositiveDic);
             /****************
              * 反向词典
              * *************/
-            foreach (var item in StringHelper.Splite1(b, "\r\n"))
-            {
-                var c = StringHelper.Select(item.Trim(), "(", ")");
-                if (c.Count == 0)
-                    continue;
-                var d = StringHelper.Reverse(c[0].Substring(1, c[0].Length - 2));
-                var w = _WordInnfo.Parse($"({d}){c[1]}{c[2]}");
-                if (w != null)
-                    NegtiveDic.Add_Node(w);
-            }
+            _parser.Parse(b, NegtiveDic, true);
             /*************************************
              * 单字词典
              * *********************/
@@ -103,12 +94,19 @@ namespace Test.Chinese.DicManager
              * 新词词典
              * *****************/
             if (_config.IsDetectNewWord)
-                foreach (var item in StringHelper.Splite(File.ReadAllText(_config.NewDicPath), "\r\n"))
-                    NewWordDic.Add_Node(new _WordInnfo(item.Trim()));
+            {
+                b = File.ReadAllText(_config.NewDicPath);
+                _parser.Parse(b, NewWordDic);
+            }
 
         }
 
         public _WordInnfo GetWordInfoFromSingleDic(char ch) => SingleDic.ContainsKey(ch) ? SingleDic[ch] : null;
        
+
+        private void parseDic(string path, Search_Tree<_WordInnfo> dic)
+        {
+
+        }
     }
 }
